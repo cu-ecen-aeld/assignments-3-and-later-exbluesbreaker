@@ -7,13 +7,13 @@ PIDFILE=/var/run/$DAEMON_NAME.pid
 do_start() {
     echo "Starting $DAEMON_NAME"
     start-stop-daemon -S -n $DAEMON_NAME -a $DAEMON -- -d
-    log_end_msg $?
+    echo $?
 }
 
 do_stop() {
     echo "Stopping $DAEMON_NAME"
     start-stop-daemon -K -n $DAEMON_NAME
-    log_end_msg $?
+    echo $?
 }
 
 case "$1" in
