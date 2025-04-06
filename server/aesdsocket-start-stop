@@ -1,0 +1,39 @@
+#!/bin/sh
+
+DAEMON=/usr/bin/aesdsocket
+DAEMON_NAME=aesdsocket
+PIDFILE=/var/run/$DAEMON_NAME.pid
+
+do_start() {
+    log_daemon_msg "Starting $DAEMON_NAME"
+    start-stop-daemon -S -n $DAEMON_NAME -a $DAEMON -d
+    log_end_msg $?
+}
+
+do_stop() {
+    log_daemon_msg "Stopping $DAEMON_NAME"
+    start-stop-daemon -K -n $DAEMON_NAME
+    log_end_msg $?
+}
+
+case "$1" in
+    start)
+        do_start
+        ;;
+    stop)
+        do_stop
+        ;;
+    restart)
+        do_stop
+        do_start
+        ;;
+    status)
+        status_of_proc -p $PIDFILE $DAEMON $DAEMON_NAME && exit 0 || exit $?
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac
+
+exit 0
