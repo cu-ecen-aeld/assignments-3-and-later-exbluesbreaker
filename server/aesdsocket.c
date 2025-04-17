@@ -180,6 +180,55 @@ int main(int argc, char *argv[])
     struct addrinfo hints;
     struct addrinfo *servinfo; // will point to the results
 
+    memset(&hints, 0, sizeof hints); // make sure the struct is empty
+    hints.ai_family = AF_UNSPEC;     // don't care IPv4 or IPv6
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE; // fill in my IP for me
+
+    if ((status = getaddrinfo(NULL, "9000", &hints, &servinfo)) != 0)
+    {
+        printf("getaddrinfo error: %s\n", gai_strerror(status));
+        exit(-1);
+    }
+    main_sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+    if (main_sockfd == -1)
+    {
+        perror("Socket error");
+        exit(-1);
+    }
+    int opt = 1;
+    if (setsockopt(main_sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+    {
+        perror("setsockopt");
+        close(main_sockfd);
+        exit(-1);
+    }
+    status = bind(main_sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
+    if (status == -1)
+    {
+        perror("Bind failed");
+        exit(-1);
+    }
+    if (daemon_mode)
+    {
+        status = fork();
+        if (status == -1)
+        {
+            perror("Fork in daemon mode failed");
+            exit(-1);
+        }
+        else if (status != 0)
+        {
+            exit(0);
+        }
+    }
+    unlink(FILE_NAME);
+    tmp_fd = open(FILE_NAME, O_APPEND | O_CREAT | O_RDWR, 0755);
+    if (tmp_fd == -1)
+    {
+        perror("File open failed");
+        exit(-1);
+    }
     struct sigaction sa;
 
     memset(&sa, 0, sizeof(sa));
@@ -222,56 +271,6 @@ int main(int argc, char *argv[])
     if (timer_settime(timer_id, 0, &timer_spec, NULL) == -1) {
         perror("timer_settime failed");
         exit(1);
-    }
-
-    memset(&hints, 0, sizeof hints); // make sure the struct is empty
-    hints.ai_family = AF_UNSPEC;     // don't care IPv4 or IPv6
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE; // fill in my IP for me
-
-    if ((status = getaddrinfo(NULL, "9000", &hints, &servinfo)) != 0)
-    {
-        printf("getaddrinfo error: %s\n", gai_strerror(status));
-        exit(-1);
-    }
-    main_sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-    if (main_sockfd == -1)
-    {
-        perror("Socket error");
-        exit(-1);
-    }
-    int opt = 1;
-    if (setsockopt(main_sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-    {
-        perror("setsockopt");
-        close(main_sockfd);
-        exit(-1);
-    }
-    status = bind(main_sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
-    if (status == -1)
-    {
-        perror("Bind failed");
-        exit(-1);
-    }
-    unlink(FILE_NAME);
-    tmp_fd = open(FILE_NAME, O_APPEND | O_CREAT | O_RDWR, 0755);
-    if (tmp_fd == -1)
-    {
-        perror("File open failed");
-        exit(-1);
-    }
-    if (daemon_mode)
-    {
-        status = fork();
-        if (status == -1)
-        {
-            perror("Fork in daemon mode failed");
-            exit(-1);
-        }
-        else if (status != 0)
-        {
-            exit(0);
-        }
     }
     while (1)
     {
