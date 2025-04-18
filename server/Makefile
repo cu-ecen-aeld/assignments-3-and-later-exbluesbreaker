@@ -1,4 +1,6 @@
+ifndef CC
 CC := $(if $(CROSS_COMPILE),$(CROSS_COMPILE)gcc,gcc)
+endif
 CFLAGS = -Wall -Wextra -Werror -O2
 TARGET = aesdsocket
 SRC = aesdsocket.c
