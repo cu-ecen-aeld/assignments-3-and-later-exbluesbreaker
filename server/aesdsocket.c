@@ -105,7 +105,7 @@ void *thread_function(void *arg)
         if (data_size == -1)
         {
             perror("Recv failed");
-            pthread_exit(NULL);
+            return NULL;
         }
         buffer[data_size] = '\0';
         int write_size = data_size;
@@ -124,7 +124,7 @@ void *thread_function(void *arg)
         if (status == -1)
         {
             perror("File write failed");
-            pthread_exit(NULL);
+            return NULL;
         }
     }
     /* Send data back */
@@ -132,7 +132,7 @@ void *thread_function(void *arg)
     if (status == -1)
     {
         perror("Lseek failed");
-        pthread_exit(NULL);
+        return NULL;
     }
     transfer_end = false;
     while (!transfer_end)
@@ -141,7 +141,7 @@ void *thread_function(void *arg)
         if (data_size == -1)
         {
             perror("File read failed");
-            pthread_exit(NULL);
+            return NULL;
         }
         if (data_size == 0)
         {
@@ -154,13 +154,12 @@ void *thread_function(void *arg)
             if (status == -1)
             {
                 perror("Send failed");
-                pthread_exit(NULL);
+                return NULL;
             }
         }
     }
     syslog(LOG_DEBUG, "Closed connection from %s", item->ip_str);
     item->complete = true;
-    pthread_exit(NULL);
     return NULL;
 }
 
