@@ -1,3 +1,13 @@
+This is the Oops message received after performing command `echo “hello_world” > /dev/faulty`. 
+
+Command performs writing to device file `/dev/faulty` which corresponds to `faulty` module.
+
+Eventually such call leads to calling registerd file operation for write in this module which just performs dereference of a `NULL` pointer.
+
+In the end of message you can see it in stack trace where the **oldest call (bottom of the stack) is printed last**.
+You can see that crash/fault happens in a function `faulty_write` which is a registered handler for a write operation.
+
+```
 Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
 Mem abort info:
   ESR = 0x0000000096000045
@@ -40,3 +50,4 @@ Call trace:
  el0t_64_sync+0x18c/0x190
 Code: d2800001 d2800000 d503233f d50323bf (b900003f) 
 ---[ end trace 0000000000000000 ]---
+```
